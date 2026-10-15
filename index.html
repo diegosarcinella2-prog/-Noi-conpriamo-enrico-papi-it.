@@ -78,7 +78,8 @@
     </div>
 
     <div class="video-wrapper" id="videoContainer">
-        <video id="papiVideo" loop playsinline webkit-playsinline></video>
+        <!-- Aggiunti attributi di sblocco nativi per i telefoni -->
+        <video id="papiVideo" loop playsinline webkit-playsinline muted></video>
     </div>
 
     <script>
@@ -87,7 +88,6 @@
         const videoContainer = document.getElementById('videoContainer');
         const papiVideo = document.getElementById('papiVideo');
 
-        // Cerca i formati video più comuni caricati nella cartella
         const videoSources = ['papi', 'papi.mp4', 'papi.MP4', 'papi.mov', 'papi.MOV'];
         let currentSourceIndex = 0;
 
@@ -111,10 +111,25 @@
                 mainInterface.style.display = 'none';
                 videoContainer.style.display = 'block';
                 
-                // Avvia il video a volume massimo
+                // Trucco per sbloccare l'audio sui telefoni Android/iOS
+                papiVideo.muted = false;
                 papiVideo.volume = 1.0;
                 
-                // Tenta l'apertura a tutto schermo nativa del sistema operativo
+                // Tenta la riproduzione forzata
+                const playPromise = papiVideo.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Il browser richiede un secondo tocco:", error);
+                        // Se fallisce ancora, riprova forzando il muto e riattivando l'audio subito dopo
+                        papiVideo.muted = true;
+                        papiVideo.play().then(() => {
+                            setTimeout(() => { papiVideo.muted = false; }, 50);
+                        });
+                    });
+                }
+
+                // Schermo intero automatico
                 if (papiVideo.requestFullscreen) {
                     papiVideo.requestFullscreen().catch(() => {});
                 } else if (papiVideo.webkitRequestFullscreen) {
@@ -123,12 +138,8 @@
                     papiVideo.webkitEnterFullscreen();
                 }
                 
-                papiVideo.play().catch(err => {
-                    console.log("Riproduzione bloccata dal browser:", err);
-                });
             }, 500);
         });
     </script>
 </body>
 </html>
-
