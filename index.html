@@ -14,51 +14,45 @@
             width: 100%;
             height: 100%;
             background-color: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
+            -webkit-user-select: none;
+            user-select: none;
         }
         .container {
             text-align: center;
             padding: 20px;
-            z-index: 2;
-            transition: opacity 0.5s ease;
+            z-index: 5;
+            transition: opacity 0.3s ease;
         }
         h1 {
             color: #ffffff;
-            font-size: 28px;
-            margin-bottom: 40px;
+            font-size: 26px;
+            margin-bottom: 30px;
             font-weight: 700;
-            line-height: 1.4;
-            padding: 0 10px;
         }
         .btn-papi {
             background-color: #ffcc00;
             color: #000000;
             font-size: 22px;
             font-weight: bold;
-            padding: 20px 50px;
+            padding: 20px 45px;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 8px 25px rgba(255, 204, 0, 0.4);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.1s ease, box-shadow 0.1s ease;
-            -webkit-tap-highlight-color: transparent;
         }
-        .btn-papi:active {
-            transform: scale(0.95);
-            box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2);
-        }
-        .video-wrapper {
+        /* Contenitore finto Schermo Intero - Infallibile su Mobile */
+        .video-fixed-screen {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: #000000;
             z-index: 10;
             display: none;
@@ -66,79 +60,82 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: contain; /* Mantiene le proporzioni sia orizzontale che verticale */
+        }
+        /* Pulsante invisibile gigante per sbloccare l'audio al volo */
+        .audio-unmute-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            display: none;
+            background: rgba(0,0,0,0.01);
         }
     </style>
 </head>
 <body>
 
-    <div class="container" id="mainInterface">
+    <div class="container" id="interfaceBox">
         <h1>Scopri cosa vuole Enrico Papi da te</h1>
-        <button class="btn-papi" id="playBtn">Scoprilo ora 🎬</button>
+        <button class="btn-papi" id="startBtn">Scoprilo ora 🎬</button>
     </div>
 
-    <div class="video-wrapper" id="videoContainer">
-        <!-- Aggiunti attributi di sblocco nativi per i telefoni -->
-        <video id="papiVideo" loop playsinline webkit-playsinline muted></video>
+    <div class="video-fixed-screen" id="screenWrapper">
+        <video id="papiPlayer" loop playsinline webkit-playsinline muted autoplay preload="auto">
+            <source src="papi" type="video/mp4">
+            <source src="papi.mp4" type="video/mp4">
+        </video>
+        <div class="audio-unmute-overlay" id="audioUnmute"></div>
     </div>
 
     <script>
-        const playBtn = document.getElementById('playBtn');
-        const mainInterface = document.getElementById('mainInterface');
-        const videoContainer = document.getElementById('videoContainer');
-        const papiVideo = document.getElementById('papiVideo');
+        const startBtn = document.getElementById('startBtn');
+        const interfaceBox = document.getElementById('interfaceBox');
+        const screenWrapper = document.getElementById('screenWrapper');
+        const papiPlayer = document.getElementById('papiPlayer');
+        const audioUnmute = document.getElementById('audioUnmute');
 
-        const videoSources = ['papi', 'papi.mp4', 'papi.MP4', 'papi.mov', 'papi.MOV'];
-        let currentSourceIndex = 0;
+        // Forza il caricamento preventivo del file video
+        papiPlayer.load();
 
-        function tryLoadVideo() {
-            if (currentSourceIndex < videoSources.length) {
-                papiVideo.src = videoSources[currentSourceIndex];
-                papiVideo.load();
-            }
-        }
-
-        papiVideo.addEventListener('error', () => {
-            currentSourceIndex++;
-            tryLoadVideo();
+        startBtn.addEventListener('click', () => {
+            // Scomparsa interfaccia iniziale
+            interfaceBox.style.opacity = '0';
+            
+            setTimeout(() => {
+                interfaceBox.style.display = 'none';
+                screenWrapper.style.display = 'block';
+                
+                // Avvia il video (con il muto attivo per bypassare i blocchi dei telefoni)
+                papiPlayer.play().then(() => {
+                    // Se parte, attiviamo la superficie trasparente per catturare l'audio al millesimo
+                    audioUnmute.style.display = 'block';
+                    
+                    // Tentativo automatico immediato di togliere il muto
+                    papiPlayer.muted = false;
+                    papiPlayer.volume = 1.0;
+                }).catch(err => {
+                    // Se il browser è super aggressivo, riprova forzando il loop muto
+                    papiPlayer.muted = true;
+                    papiPlayer.play();
+                    audioUnmute.style.display = 'block';
+                });
+            }, 300);
         });
 
-        tryLoadVideo();
-
-        playBtn.addEventListener('click', () => {
-            mainInterface.style.opacity = '0';
-            setTimeout(() => {
-                mainInterface.style.display = 'none';
-                videoContainer.style.display = 'block';
-                
-                // Trucco per sbloccare l'audio sui telefoni Android/iOS
-                papiVideo.muted = false;
-                papiVideo.volume = 1.0;
-                
-                // Tenta la riproduzione forzata
-                const playPromise = papiVideo.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        console.log("Il browser richiede un secondo tocco:", error);
-                        // Se fallisce ancora, riprova forzando il muto e riattivando l'audio subito dopo
-                        papiVideo.muted = true;
-                        papiVideo.play().then(() => {
-                            setTimeout(() => { papiVideo.muted = false; }, 50);
-                        });
-                    });
-                }
-
-                // Schermo intero automatico
-                if (papiVideo.requestFullscreen) {
-                    papiVideo.requestFullscreen().catch(() => {});
-                } else if (papiVideo.webkitRequestFullscreen) {
-                    papiVideo.webkitRequestFullscreen().catch(() => {});
-                } else if (papiVideo.webkitEnterFullscreen) {
-                    papiVideo.webkitEnterFullscreen();
-                }
-                
-            }, 500);
+        // Appena l'utente tocca lo schermo del video, l'audio si sblocca istantaneamente
+        audioUnmute.addEventListener('click', () => {
+            papiPlayer.muted = false;
+            papiPlayer.volume = 1.0;
+            audioUnmute.style.display = 'none'; // Rimuove la protezione trasparente
+        });
+        
+        audioUnmute.addEventListener('touchstart', () => {
+            papiPlayer.muted = false;
+            papiPlayer.volume = 1.0;
+            audioUnmute.style.display = 'none';
         });
     </script>
 </body>
