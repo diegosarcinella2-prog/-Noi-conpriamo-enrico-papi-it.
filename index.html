@@ -2,141 +2,114 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Noi compriamo Enrico Papi .it</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vuoi scoprire cosa vuole Enrico Papi da te?</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-            background-color: #000000;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            overflow: hidden;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
-            -webkit-user-select: none;
-            user-select: none;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
         .container {
             text-align: center;
-            padding: 20px;
-            z-index: 5;
-            transition: opacity 0.3s ease;
         }
         h1 {
-            color: #ffffff;
-            font-size: 26px;
-            margin-bottom: 30px;
-            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
         }
-        .btn-papi {
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
             background-color: #ffcc00;
-            color: #000000;
-            font-size: 22px;
-            font-weight: bold;
-            padding: 20px 45px;
+            color: #000;
             border: none;
-            border-radius: 50px;
+            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.4);
-            text-transform: uppercase;
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
-        /* Contenitore finto Schermo Intero - Infallibile su Mobile */
-        .video-fixed-screen {
+        button:hover {
+            background-color: #e6b800;
+        }
+        #video-container {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000000;
-            z-index: 10;
-            display: none;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
         }
         video {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Mantiene le proporzioni sia orizzontale che verticale */
-        }
-        /* Pulsante invisibile gigante per sbloccare l'audio al volo */
-        .audio-unmute-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 20;
-            display: none;
-            background: rgba(0,0,0,0.01);
+            object-fit: contain;
         }
     </style>
 </head>
 <body>
 
-    <div class="container" id="interfaceBox">
-        <h1>Scopri cosa vuole Enrico Papi da te</h1>
-        <button class="btn-papi" id="startBtn">Scoprilo ora 🎬</button>
-    </div>
+<div class="container" id="main-content">
+    <h1>Vuoi scoprire cosa vuole Enrico Papi da te?</h1>
+    <button id="start-btn">SCOPRILO ORA 🚀</button>
+</div>
 
-    <div class="video-fixed-screen" id="screenWrapper">
-        <video id="papiPlayer" loop playsinline webkit-playsinline muted autoplay preload="auto">
-            <source src="papi" type="video/mp4">
-            <source src="papi.mp4" type="video/mp4">
-        </video>
-        <div class="audio-unmute-overlay" id="audioUnmute"></div>
-    </div>
+<div id="video-container">
+    <video id="papi-video" loop playsinline>
+        <source src="papi" type="video/mp4">
+        <source src="papi.mp4" type="video/mp4">
+        Il tuo browser non supporta il tag video.
+    </video>
+</div>
 
-    <script>
-        const startBtn = document.getElementById('startBtn');
-        const interfaceBox = document.getElementById('interfaceBox');
-        const screenWrapper = document.getElementById('screenWrapper');
-        const papiPlayer = document.getElementById('papiPlayer');
-        const audioUnmute = document.getElementById('audioUnmute');
+<script>
+    const startBtn = document.getElementById('start-btn');
+    const videoContainer = document.getElementById('video-container');
+    const papiVideo = document.getElementById('papi-video');
+    const mainContent = document.getElementById('main-content');
 
-        // Forza il caricamento preventivo del file video
-        papiPlayer.load();
-
-        startBtn.addEventListener('click', () => {
-            // Scomparsa interfaccia iniziale
-            interfaceBox.style.opacity = '0';
-            
-            setTimeout(() => {
-                interfaceBox.style.display = 'none';
-                screenWrapper.style.display = 'block';
-                
-                // Avvia il video (con il muto attivo per bypassare i blocchi dei telefoni)
-                papiPlayer.play().then(() => {
-                    // Se parte, attiviamo la superficie trasparente per catturare l'audio al millesimo
-                    audioUnmute.style.display = 'block';
-                    
-                    // Tentativo automatico immediato di togliere il muto
-                    papiPlayer.muted = false;
-                    papiPlayer.volume = 1.0;
-                }).catch(err => {
-                    // Se il browser è super aggressivo, riprova forzando il loop muto
-                    papiPlayer.muted = true;
-                    papiPlayer.play();
-                    audioUnmute.style.display = 'block';
-                });
-            }, 300);
-        });
-
-        // Appena l'utente tocca lo schermo del video, l'audio si sblocca istantaneamente
-        audioUnmute.addEventListener('click', () => {
-            papiPlayer.muted = false;
-            papiPlayer.volume = 1.0;
-            audioUnmute.style.display = 'none'; // Rimuove la protezione trasparente
-        });
+    startBtn.addEventListener('click', () => {
+        mainContent.style.display = 'none';
+        videoContainer.style.display = 'block';
         
-        audioUnmute.addEventListener('touchstart', () => {
-            papiPlayer.muted = false;
-            papiPlayer.volume = 1.0;
-            audioUnmute.style.display = 'none';
+        papiVideo.play().catch(error => {
+            console.log("Riproduzione bloccata, provo con il muto per i blocchi mobile:", error);
+            papiVideo.muted = true;
+            papiVideo.play();
         });
-    </script>
+
+        if (videoContainer.requestFullscreen) {
+            videoContainer.requestFullscreen().catch(err => console.log(err));
+        } else if (videoContainer.webkitRequestFullscreen) {
+            videoContainer.webkitRequestFullscreen().catch(err => console.log(err));
+        } else if (papiVideo.webkitEnterFullscreen) {
+            papiVideo.webkitEnterFullscreen();
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            papiVideo.pause();
+            videoContainer.style.display = 'none';
+            mainContent.style.display = 'block';
+        }
+    });
+
+    document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.webkitFullscreenElement) {
+            papiVideo.pause();
+            videoContainer.style.display = 'none';
+            mainContent.style.display = 'block';
+        }
+    });
+</script>
+
 </body>
 </html>
